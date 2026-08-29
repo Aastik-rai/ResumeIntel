@@ -27,31 +27,47 @@ def home():
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
-    data =request.get_json()
-    if not data:
-        return jsonify({
-            "success":False,
-            "message":"Request body is required"
-        }), 400
-   
-    company=data.get("company")
-    role=data.get("role")
-    if not company:
+    company=request.form.get("company")#get company name
+    role=request.form.get("role")# get role 
+    file=request.files.get("resume")# get resume file 
+    if not company: #if company name is missing 
         return jsonify({
             "success":False,
             "message":"Company is required"
         }), 400
-
-    if not role:
+    if not role:  #if role is missing
         return jsonify({
             "success":False,
-            "message":"role is required"
+            "message":"Role is required"
+        }), 400
+    if not file: #if file is missing
+        return jsonify({
+            "success":False,
+            "message":"Resume file is required"
+        }), 400
+    if file.filename=="":  #if file name is missing
+        return jsonify({
+            "success":False,
+            "message":"No file selected"
+        }), 400
+    if not allowed_file(file.filename):  #if file is of allowed type 
+        return jsonify({
+            "success":False,
+            "message":"only PDf and DOCX files are allowed"
         }), 400
 
-    return jsonify({
+    filename=secure_filename(file.filename)   #change file name to a secured file name 
+    if not filename:
+        return jsonify({
+            "success":False,
+            "message":"Invalid filename"
+        }),400
+    
+    return jsonify({    # return all values
         "success": True,
         "company": company,
         "role": role,
+        "filename":filename,
         "message": "Analysis request received"
     }),200
 
