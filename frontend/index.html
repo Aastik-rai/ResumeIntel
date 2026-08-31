@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>ResumeIntel</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- ===============================
+         NAVBAR
+    ================================ -->
+
+    <nav class="navbar">
+
+        <div class="logo">
+            Resume<span>Intel</span>
+        </div>
+
+        <div class="nav-links">
+            <a href="#how-it-works">How It Works</a>
+            <a href="#features">Features</a>
+        </div>
+
+        <button class="nav-button" id="nav-analyze-btn">
+            Analyze Resume
+        </button>
+
+    </nav>
+
+
+    <!-- ===============================
+         HERO
+    ================================ -->
+
+    <section class="hero" id="home">
+
+        <div class="hero-inner">
+
+
+            <div class="hero-content">
+
+                <div class="badge">
+                    AI-Powered Resume Intelligence
+                </div>
+
+                <h1>
+                    Know how your resume
+                    <span>really performs.</span>
+                </h1>
+
+                <p>
+                    Analyze your resume against your target company
+                    and role. Discover your strengths, missing skills,
+                    ATS compatibility, and how to improve your chances.
+                </p>
+
+
+                <div class="hero-buttons">
+
+                    <a
+                        href="#analyzer"
+                        class="primary-button"
+                    >
+                        Analyze My Resume
+                        <span>→</span>
+                    </a>
+
+                    <a
+                        href="#how-it-works"
+                        class="secondary-button"
+                    >
+                        See how it works
+                    </a>
+
+                </div>
+
+
+                <div class="trust-row">
+
+                    <div>
+                        <strong>AI Analysis</strong>
+                        <small>Role-specific insights</small>
+                    </div>
+
+                    <div>
+                        <strong>ATS Ready</strong>
+                        <small>Keyword compatibility</small>
+                    </div>
+
+                    <div>
+                        <strong>Actionable</strong>
+                        <small>Clear improvements</small>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ===============================
+                 ANALYSIS CARD
+            ================================ -->
+
+            <div class="analysis-card" id="analyzer">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <small>
+                            RESUME ANALYSIS
+                        </small>
+
+                        <h2>
+                            Start Analysis
+                        </h2>
+
+                    </div>
+
+                    <div class="status-dot"></div>
+
+                </div>
+
+
+                <!-- Company -->
+
+                <div class="input-group">
+
+                    <label for="company">
+                        Target Company
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <span>🏢</span>
+
+                        <input
+                            type="text"
+                            id="company"
+                            placeholder="e.g. Google"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- Role -->
+
+                <div class="input-group">
+
+                    <label for="role">
+                        Target Role
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <span>💼</span>
+
+                        <input
+                            type="text"
+                            id="role"
+                            placeholder="e.g. Software Engineer"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- Resume -->
+
+                <div class="input-group">
+
+                    <label>
+                        Upload Resume
+                    </label>
+
+                    <div class="upload-area">
+
+                        <input
+                            type="file"
+                            id="resume"
+                            accept=".pdf,.doc,.docx"
+                        >
+
+                        <div class="upload-icon">
+                            ↑
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Drop your resume here
+                            </strong>
+
+                            <p>
+                                PDF, DOC or DOCX
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Analyze -->
+
+                <button
+                    class="analyze-button"
+                    id="analyze-btn"
+                >
+                    Analyze Resume
+                    <span>→</span>
+                </button>
+
+
+                <p class="privacy-note">
+                    Your resume is used only for analysis.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ===============================
+         RESULTS SECTION
+    ================================ -->
+
+    <section
+        class="results-section"
+        id="results"
+    >
+
+        <div class="results-container">
+
+
+            <!-- Top -->
+
+            <div class="results-top">
+
+                <div>
+
+                    <span class="results-label">
+                        RESUME ANALYSIS
+                    </span>
+
+                    <h2>
+                        Your Resume Score
+                    </h2>
+
+                    <p>
+                        Here's how your resume performs against
+                        the selected job role and company.
+                    </p>
+
+                </div>
+
+
+                <button
+                    class="new-analysis-btn"
+                    id="new-analysis-btn"
+                >
+                    ← Analyze Another Resume
+                </button>
+
+            </div>
+
+
+            <!-- Target information -->
+
+            <div class="target-info">
+
+                <div>
+
+                    <span>
+                        TARGET COMPANY
+                    </span>
+
+                    <strong id="result-company">
+                        Google
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        TARGET ROLE
+                    </span>
+
+                    <strong id="result-role">
+                        Software Engineer
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        RESUME
+                    </span>
+
+                    <strong id="result-resume">
+                        resume.pdf
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- ===============================
+                 SCORE CARDS
+            ================================ -->
+
+            <div class="score-grid">
+
+
+                <!-- Overall -->
+
+                <div class="score-card overall-score">
+
+                    <span class="score-card-label">
+                        OVERALL SCORE
+                    </span>
+
+
+                    <div class="score-circle">
+
+                        <svg viewBox="0 0 120 120">
+
+                            <circle
+                                class="score-track"
+                                cx="60"
+                                cy="60"
+                                r="52"
+                            ></circle>
+
+                            <circle
+                                class="score-progress"
+                                cx="60"
+                                cy="60"
+                                r="52"
+                            ></circle>
+
+                        </svg>
+
+
+                        <div class="score-number">
+
+                            <strong id="overall-score">
+                                82
+                            </strong>
+
+                            <span>
+                                /100
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <h3>
+                        Strong Resume
+                    </h3>
+
+                    <p id="overall-message">
+                        Your resume is a strong match for this
+                        position.
+                    </p>
+
+                </div>
+
+
+                <!-- ATS -->
+
+                <div class="score-card">
+
+                    <div class="score-card-heading">
+
+                        <span class="mini-icon">
+                            ✓
+                        </span>
+
+                        <div>
+
+                            <span>
+                                ATS COMPATIBILITY
+                            </span>
+
+                            <strong id="ats-score">
+                                88%
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="progress-bar">
+
+                        <div
+                            class="progress-fill"
+                            id="ats-progress"
+                        ></div>
+
+                    </div>
+
+
+                    <p>
+                        Your resume is well structured for
+                        ATS systems.
+                    </p>
+
+                </div>
+
+
+                <!-- Job Match -->
+
+                <div class="score-card">
+
+                    <div class="score-card-heading">
+
+                        <span class="mini-icon">
+                            ★
+                        </span>
+
+                        <div>
+
+                            <span>
+                                JOB MATCH
+                            </span>
+
+                            <strong id="match-score">
+                                79%
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="progress-bar">
+
+                        <div
+                            class="progress-fill"
+                            id="match-progress"
+                        ></div>
+
+                    </div>
+
+
+                    <p>
+                        Good alignment with the selected
+                        job requirements.
+                    </p>
+
+                </div>
+
+
+                <!-- Skills -->
+
+                <div class="score-card">
+
+                    <div class="score-card-heading">
+
+                        <span class="mini-icon">
+                            ◆
+                        </span>
+
+                        <div>
+
+                            <span>
+                                SKILLS MATCH
+                            </span>
+
+                            <strong id="skills-score">
+                                84%
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="progress-bar">
+
+                        <div
+                            class="progress-fill"
+                            id="skills-progress"
+                        ></div>
+
+                    </div>
+
+
+                    <p>
+                        Most important technical skills
+                        are present.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- ===============================
+                 ANALYSIS DETAILS
+            ================================ -->
+
+            <div class="analysis-grid">
+
+
+                <!-- Strengths -->
+
+                <div class="result-panel">
+
+                    <div class="panel-header">
+
+                        <div class="panel-icon success">
+                            ✓
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Resume Strengths
+                            </h3>
+
+                            <p>
+                                What's working well
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <ul class="result-list">
+
+                        <li>
+                            <span>✓</span>
+                            Strong technical skill coverage
+                        </li>
+
+                        <li>
+                            <span>✓</span>
+                            Clear project experience
+                        </li>
+
+                        <li>
+                            <span>✓</span>
+                            Good use of measurable achievements
+                        </li>
+
+                        <li>
+                            <span>✓</span>
+                            Clean and readable resume structure
+                        </li>
+
+                    </ul>
+
+                </div>
+
+
+                <!-- Missing -->
+
+                <div class="result-panel">
+
+                    <div class="panel-header">
+
+                        <div class="panel-icon warning">
+                            !
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Missing Keywords
+                            </h3>
+
+                            <p>
+                                Skills worth adding
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="keyword-list">
+
+                        <span>
+                            System Design
+                        </span>
+
+                        <span>
+                            Docker
+                        </span>
+
+                        <span>
+                            AWS
+                        </span>
+
+                        <span>
+                            CI/CD
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ===============================
+                 RECOMMENDATIONS
+            ================================ -->
+
+            <div class="recommendations-panel">
+
+                <div class="panel-header">
+
+                    <div class="panel-icon recommendation">
+                        →
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Recommended Improvements
+                        </h3>
+
+                        <p>
+                            Actions that could increase your score
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="recommendation-list">
+
+
+                    <div class="recommendation-item">
+
+                        <span>
+                            01
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Add system design experience
+                            </strong>
+
+                            <p>
+                                Include a project or experience
+                                demonstrating scalable system
+                                architecture.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="recommendation-item">
+
+                        <span>
+                            02
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Improve keyword alignment
+                            </strong>
+
+                            <p>
+                                Add relevant technologies mentioned
+                                in the target job description.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="recommendation-item">
+
+                        <span>
+                            03
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Quantify more achievements
+                            </strong>
+
+                            <p>
+                                Use numbers and measurable results
+                                wherever possible.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ===============================
+         HOW IT WORKS
+    ================================ -->
+
+    <section
+        class="how-it-works"
+        id="how-it-works"
+    >
+
+        <div class="section-heading">
+
+            <span>
+                HOW IT WORKS
+            </span>
+
+            <h2>
+                From resume to insights in four steps.
+            </h2>
+
+            <p>
+                ResumeIntel turns your resume into clear,
+                actionable career intelligence.
+            </p>
+
+        </div>
+
+
+        <div class="steps">
+
+
+            <div class="step-card">
+
+                <div class="step-number">
+                    01
+                </div>
+
+                <div class="step-icon">
+                    ↑
+                </div>
+
+                <h3>
+                    Upload
+                </h3>
+
+                <p>
+                    Upload your existing resume in PDF,
+                    DOC, or DOCX format.
+                </p>
+
+            </div>
+
+
+            <div class="step-card">
+
+                <div class="step-number">
+                    02
+                </div>
+
+                <div class="step-icon">
+                    ◎
+                </div>
+
+                <h3>
+                    Select Target
+                </h3>
+
+                <p>
+                    Tell us which company and role
+                    you're targeting.
+                </p>
+
+            </div>
+
+
+            <div class="step-card">
+
+                <div class="step-number">
+                    03
+                </div>
+
+                <div class="step-icon">
+                    ◇
+                </div>
+
+                <h3>
+                    Analyze
+                </h3>
+
+                <p>
+                    Your resume is evaluated against
+                    the target position.
+                </p>
+
+            </div>
+
+
+            <div class="step-card">
+
+                <div class="step-number">
+                    04
+                </div>
+
+                <div class="step-icon">
+                    ✓
+                </div>
+
+                <h3>
+                    Improve
+                </h3>
+
+                <p>
+                    Get scores, missing skills and
+                    actionable recommendations.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ===============================
+         FEATURES
+    ================================ -->
+
+    <section
+        class="features"
+        id="features"
+    >
+
+        <div class="section-heading">
+
+            <span>
+                FEATURES
+            </span>
+
+            <h2>
+                More than just a resume score.
+            </h2>
+
+            <p>
+                Understand exactly where your resume
+                stands and what to improve.
+            </p>
+
+        </div>
+
+
+        <div class="feature-grid">
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">
+                    01
+                </div>
+
+                <h3>
+                    ATS Analysis
+                </h3>
+
+                <p>
+                    Understand how compatible your resume
+                    is with applicant tracking systems.
+                </p>
+
+            </div>
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">
+                    02
+                </div>
+
+                <h3>
+                    Skill Matching
+                </h3>
+
+                <p>
+                    Identify the technical and professional
+                    skills that match your target role.
+                </p>
+
+            </div>
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">
+                    03
+                </div>
+
+                <h3>
+                    Actionable Insights
+                </h3>
+
+                <p>
+                    Get specific recommendations instead
+                    of a score with no explanation.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ===============================
+         FINAL CTA
+    ================================ -->
+
+    <section class="final-cta">
+
+        <h2>
+            Ready to know your resume score?
+        </h2>
+
+        <p>
+            Analyze your resume against your target role.
+        </p>
+
+        <a
+            href="#analyzer"
+            class="primary-button"
+        >
+            Analyze My Resume
+            <span>→</span>
+        </a>
+
+    </section>
+
+
+    <!-- ===============================
+         FOOTER
+    ================================ -->
+
+    <footer>
+
+        <div class="logo">
+            Resume<span>Intel</span>
+        </div>
+
+        <p>
+            Resume intelligence for better opportunities.
+        </p>
+
+    </footer>
+
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
