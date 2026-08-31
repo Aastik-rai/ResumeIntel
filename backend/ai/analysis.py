@@ -8,9 +8,72 @@ model = genai.GenerativeModel("gemini-flash-latest")
 
 
 def extract_terms(text):
-    words = re.findall(r"\b[a-zA-Z][a-zA-Z\+\#\.]{1,}\b", text.lower())
-    return set(w for w in words if len(w) > 2)
+    text = text.lower()
 
+    skills = {
+        "python",
+        "java",
+        "javascript",
+        "typescript",
+        "c++",
+        "c#",
+        "go",
+        "rust",
+
+        "flask",
+        "django",
+        "fastapi",
+        "node.js",
+        "react",
+        "angular",
+        "vue",
+
+        "sql",
+        "mysql",
+        "postgresql",
+        "mongodb",
+        "redis",
+
+        "rest api",
+        "graphql",
+        "api",
+        "microservices",
+        "distributed systems",
+
+        "aws",
+        "azure",
+        "gcp",
+        "docker",
+        "kubernetes",
+
+        "git",
+        "github",
+        "linux",
+
+        "machine learning",
+        "deep learning",
+        "artificial intelligence",
+        "data analysis",
+
+        "html",
+        "css",
+        "tailwind",
+
+        "salesforce",
+        "crm",
+        "sales",
+        "business development",
+        "communication",
+        "project management"
+    }
+
+    found = set()
+
+    for skill in skills:
+        if re.search(r"\b" + re.escape(skill) + r"\b", text):
+            found.add(skill)
+
+    return found
 
 def build_company_signal_profile(postings):
     counts = Counter()
@@ -156,3 +219,12 @@ if __name__ == "__main__":
 
     result = full_analysis(resume, profile)
     print(result)
+
+
+if __name__ == "__main__":
+    text = """
+    We are looking for a backend engineer with Python, Flask,
+    PostgreSQL, REST API and Docker experience.
+    """
+
+    print(extract_terms(text))

@@ -5,7 +5,10 @@ from jobs.greenhouse import (
     build_posting
 )
 
-from ai.analysis import build_company_signal_profile
+from ai.analysis import (
+    build_company_signal_profile,
+    full_analysis
+)
 
 
 def get_company_profile(company, role):
@@ -40,6 +43,16 @@ def get_company_profile(company, role):
 
     return profile
 
+def analyze_resume_for_company(company, role, resume_data):
+    company_profile = get_company_profile(company, role)
+
+    result = full_analysis(
+        resume_data,
+        company_profile
+    )
+
+    return result
+
 
 if __name__ == "__main__":
 
@@ -52,3 +65,36 @@ if __name__ == "__main__":
 
     for item in profile:
         print(item)
+
+
+
+
+if __name__ == "__main__":
+
+    resume_data = {
+        "skills": [
+            "python",
+            "flask",
+            "sql"
+        ],
+
+        "experience": [
+            {
+                "title": "Software Engineer Intern",
+                "company": "ABC Corp",
+                "bullets": [
+                    "Built backend APIs using Python and Flask.",
+                    "Optimized SQL queries for an internal application."
+                ]
+            }
+        ]
+    }
+
+    result = analyze_resume_for_company(
+        "airbnb",
+        "software engineer",
+        resume_data
+    )
+
+    print("\nFinal Analysis:")
+    print(result)
