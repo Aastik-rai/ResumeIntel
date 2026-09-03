@@ -11,19 +11,32 @@ const companyInput = document.getElementById("company");
 
 const roleInput = document.getElementById("role");
 
+const jobDescriptionInput =
+    document.getElementById("job-description");
+
 const resumeInput = document.getElementById("resume");
 
-const uploadArea = document.querySelector(".upload-area");
+const uploadArea =
+    document.querySelector(".upload-area");
 
-const analyzeButton = document.getElementById("analyze-btn");
+const analyzeButton =
+    document.getElementById("analyze-btn");
 
-const resultsSection = document.getElementById("results");
+const resultsSection =
+    document.getElementById("results");
 
 const newAnalysisButton =
     document.getElementById("new-analysis-btn");
 
 const navAnalyzeButton =
     document.getElementById("nav-analyze-btn");
+
+
+// ===============================
+// BACKEND URL
+// ===============================
+
+const API_URL = "http://localhost:8080";
 
 
 // ===============================
@@ -47,7 +60,6 @@ function handleResumeFile(file) {
         return;
     }
 
-
     if (!allowedTypes.includes(file.type)) {
 
         alert(
@@ -59,19 +71,17 @@ function handleResumeFile(file) {
         return;
     }
 
-
     const uploadText =
         uploadArea.querySelector("strong");
 
     const uploadDescription =
         uploadArea.querySelector("p");
 
-
-    uploadText.textContent = file.name;
+    uploadText.textContent =
+        file.name;
 
     uploadDescription.textContent =
         "Resume selected successfully ✓";
-
 
     uploadArea.style.borderColor =
         "#635bff";
@@ -142,22 +152,18 @@ uploadArea.addEventListener(
 
         event.preventDefault();
 
-
         uploadArea.style.borderColor =
             "#cdd2df";
 
         uploadArea.style.background =
             "#fafaff";
 
-
         const file =
             event.dataTransfer.files[0];
-
 
         if (!file) {
             return;
         }
-
 
         if (!allowedTypes.includes(file.type)) {
 
@@ -168,44 +174,17 @@ uploadArea.addEventListener(
             return;
         }
 
-
         const dataTransfer =
             new DataTransfer();
 
-
         dataTransfer.items.add(file);
-
 
         resumeInput.files =
             dataTransfer.files;
 
-
         handleResumeFile(file);
     }
 );
-
-
-// ===============================
-// MOCK ANALYSIS DATA
-// ===============================
-//
-// This is ONLY for the frontend prototype.
-//
-// Later your backend response can replace
-// this object.
-//
-
-const mockResults = {
-
-    overall: 82,
-
-    ats: 88,
-
-    match: 79,
-
-    skills: 84
-
-};
 
 
 // ===============================
@@ -215,87 +194,233 @@ const mockResults = {
 function updateResults(
     company,
     role,
-    resume
+    resume,
+    data
 ) {
 
-    // Target information
+    // ===============================
+    // TARGET INFORMATION
+    // ===============================
 
     document.getElementById(
         "result-company"
     ).textContent = company;
 
-
     document.getElementById(
         "result-role"
     ).textContent = role;
-
 
     document.getElementById(
         "result-resume"
     ).textContent = resume.name;
 
 
-    // Overall
+    // ===============================
+    // FIT SCORE
+    // ===============================
+
+    const fitScore =
+        Number(data.fit_score) || 0;
+
+
+    // ===============================
+    // OVERALL SCORE
+    // ===============================
 
     document.getElementById(
         "overall-score"
     ).textContent =
-        mockResults.overall;
+        Math.round(fitScore);
 
 
-    // ATS
-
-    document.getElementById(
-        "ats-score"
-    ).textContent =
-        mockResults.ats + "%";
-
-
-    // Job Match
+    // ===============================
+    // JOB MATCH
+    // ===============================
 
     document.getElementById(
         "match-score"
     ).textContent =
-        mockResults.match + "%";
-
-
-    // Skills
-
-    document.getElementById(
-        "skills-score"
-    ).textContent =
-        mockResults.skills + "%";
-
-
-    // Progress bars
-
-    document.getElementById(
-        "ats-progress"
-    ).style.width =
-        mockResults.ats + "%";
-
+        fitScore.toFixed(2) + "%";
 
     document.getElementById(
         "match-progress"
     ).style.width =
-        mockResults.match + "%";
+        fitScore + "%";
 
+
+    // ===============================
+    // SKILLS MATCH
+    // ===============================
+
+    let skillsScore = 0;
+
+    if (
+        data.required_skills &&
+        data.required_skills.length > 0
+    ) {
+
+        skillsScore =
+            (
+                data.matched_skills.length /
+                data.required_skills.length
+            ) * 100;
+    }
+
+    document.getElementById(
+        "skills-score"
+    ).textContent =
+        skillsScore.toFixed(2) + "%";
 
     document.getElementById(
         "skills-progress"
     ).style.width =
-        mockResults.skills + "%";
+        skillsScore + "%";
 
 
-    // Circular overall score
+    // ===============================
+    // ATS SCORE
+    // ===============================
+
+    // Backend currently does not
+    // calculate a real ATS score.
+
+    document.getElementById(
+        "ats-score"
+    ).textContent =
+        "N/A";
+
+    document.getElementById(
+        "ats-progress"
+    ).style.width =
+        "0%";
+
+
+    // ===============================
+    // OVERALL MESSAGE
+    // ===============================
+
+    const overallMessage =
+        document.getElementById(
+            "overall-message"
+        );
+
+    if (fitScore >= 80) {
+
+        overallMessage.textContent =
+            "Your resume is a strong match for this position.";
+
+    } else if (fitScore >= 60) {
+
+        overallMessage.textContent =
+            "Your resume is a moderate match. Some improvements could increase your chances.";
+
+    } else {
+
+        overallMessage.textContent =
+            "Your resume needs improvement to better match this position.";
+    }
+
+
+    // ===============================
+    // MISSING KEYWORDS
+    // ===============================
+
+    const keywordList =
+        document.querySelector(".keyword-list");
+
+    keywordList.innerHTML = "";
+
+
+    if (
+        data.missing_skills &&
+        data.missing_skills.length > 0
+    ) {
+
+        data.missing_skills.forEach(
+            function (skill) {
+
+                const span =
+                    document.createElement("span");
+
+                span.textContent =
+                    skill;
+
+                keywordList.appendChild(span);
+            }
+        );
+
+    } else {
+
+        const span =
+            document.createElement("span");
+
+        span.textContent =
+            "No missing skills 🎉";
+
+        keywordList.appendChild(span);
+    }
+
+
+    // ===============================
+    // RESUME STRENGTHS
+    // ===============================
+
+    const resultList =
+        document.querySelector(".result-list");
+
+    resultList.innerHTML = "";
+
+
+    if (
+        data.matched_skills &&
+        data.matched_skills.length > 0
+    ) {
+
+        data.matched_skills.forEach(
+            function (skill) {
+
+                const li =
+                    document.createElement("li");
+
+                const check =
+                    document.createElement("span");
+
+                check.textContent = "✓";
+
+                li.appendChild(check);
+
+                li.appendChild(
+                    document.createTextNode(
+                        " Strong match in " + skill
+                    )
+                );
+
+                resultList.appendChild(li);
+            }
+        );
+
+    } else {
+
+        const li =
+            document.createElement("li");
+
+        li.innerHTML =
+            "<span>!</span> No matching skills found.";
+
+        resultList.appendChild(li);
+    }
+
+
+    // ===============================
+    // CIRCULAR OVERALL SCORE
+    // ===============================
 
     const circumference = 327;
-
 
     const offset =
         circumference -
         (
-            mockResults.overall / 100
+            fitScore / 100
         ) * circumference;
 
 
@@ -312,16 +437,16 @@ function updateResults(
 
 analyzeButton.addEventListener(
     "click",
-    function () {
-
+    async function () {
 
         const company =
             companyInput.value.trim();
 
-
         const role =
             roleInput.value.trim();
 
+        const jobDescription =
+            jobDescriptionInput.value.trim();
 
         const resume =
             resumeInput.files[0];
@@ -360,6 +485,22 @@ analyzeButton.addEventListener(
 
 
         // ===============================
+        // VALIDATE JOB DESCRIPTION
+        // ===============================
+
+        if (!jobDescription) {
+
+            alert(
+                "Please paste the job description."
+            );
+
+            jobDescriptionInput.focus();
+
+            return;
+        }
+
+
+        // ===============================
         // VALIDATE RESUME
         // ===============================
 
@@ -379,64 +520,149 @@ analyzeButton.addEventListener(
 
         analyzeButton.disabled = true;
 
-
         analyzeButton.innerHTML =
             "Analyzing Resume <span>...</span>";
 
 
-        // ===============================
-        // FRONTEND DEMO DELAY
-        // ===============================
+        try {
 
-        setTimeout(
-            function () {
+            // ===============================
+            // CREATE FORM DATA
+            // ===============================
+
+            const formData =
+                new FormData();
 
 
-                // Update results
+            // Add resume
 
-                updateResults(
-                    company,
-                    role,
-                    resume
+            formData.append(
+                "resume",
+                resume
+            );
+
+
+            // ===============================
+            // JOB DESCRIPTION → TEXT FILE
+            // ===============================
+
+            const jobBlob =
+                new Blob(
+                    [jobDescription],
+                    {
+                        type: "text/plain"
+                    }
                 );
 
 
-                // Restore button
-
-                analyzeButton.disabled =
-                    false;
-
-
-                analyzeButton.innerHTML =
-                    "Analysis Complete ✓";
+            formData.append(
+                "job",
+                jobBlob,
+                "job_description.txt"
+            );
 
 
-                // Hide landing hero
+            // ===============================
+            // SEND REQUEST TO BACKEND
+            // ===============================
 
-                document.querySelector(
-                    ".hero"
-                ).style.display =
-                    "none";
-
-
-                // Show results
-
-                resultsSection.classList.add(
-                    "active"
+            const response =
+                await fetch(
+                    `${API_URL}/full-analyze`,
+                    {
+                        method: "POST",
+                        body: formData
+                    }
                 );
 
 
-                // Scroll to top of results
+            // ===============================
+            // READ BACKEND RESPONSE
+            // ===============================
 
-                resultsSection.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start"
-                });
+            const data =
+                await response.json();
+             console.log("BACKEND DATA:", data);
+
+            // ===============================
+            // HANDLE ERROR
+            // ===============================
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.message ||
+                    "Analysis failed."
+                );
+            }
 
 
-            },
-            1500
-        );
+            // ===============================
+            // UPDATE RESULTS
+            // ===============================
+
+            updateResults(
+                company,
+                role,
+                resume,
+                data
+            );
+
+
+            // ===============================
+            // SUCCESS
+            // ===============================
+
+            analyzeButton.innerHTML =
+                "Analysis Complete ✓";
+
+
+            // Hide hero
+
+            document.querySelector(
+                ".hero"
+            ).style.display =
+                "none";
+
+
+            // Show results
+
+            resultsSection.classList.add(
+                "active"
+            );
+
+
+            // Scroll to results
+
+            resultsSection.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "Analysis Error:",
+                error
+            );
+alert("Error: " + error.message);
+            
+
+            analyzeButton.disabled =
+                false;
+
+            analyzeButton.innerHTML =
+                "Analyze Resume <span>→</span>";
+
+            return;
+        }
+
+
+        // Enable button after success
+
+        analyzeButton.disabled =
+            false;
     }
 );
 
@@ -448,7 +674,6 @@ analyzeButton.addEventListener(
 newAnalysisButton.addEventListener(
     "click",
     function () {
-
 
         // Hide results
 
@@ -471,6 +696,8 @@ newAnalysisButton.addEventListener(
 
         roleInput.value = "";
 
+        jobDescriptionInput.value = "";
+
         resumeInput.value = "";
 
 
@@ -478,7 +705,6 @@ newAnalysisButton.addEventListener(
 
         const uploadText =
             uploadArea.querySelector("strong");
-
 
         const uploadDescription =
             uploadArea.querySelector("p");
@@ -502,8 +728,8 @@ newAnalysisButton.addEventListener(
 
         // Reset button
 
-        analyzeButton.disabled = false;
-
+        analyzeButton.disabled =
+            false;
 
         analyzeButton.innerHTML =
             "Analyze Resume <span>→</span>";
@@ -521,13 +747,22 @@ newAnalysisButton.addEventListener(
     }
 );
 
-uploadArea.addEventListener("click", function (event) {
 
-    if (event.target !== resumeInput) {
-        resumeInput.click();
+// ===============================
+// UPLOAD AREA CLICK
+// ===============================
+
+uploadArea.addEventListener(
+    "click",
+    function (event) {
+
+        if (event.target !== resumeInput) {
+
+            resumeInput.click();
+        }
     }
+);
 
-});
 
 // ===============================
 // NAVBAR ANALYZE BUTTON

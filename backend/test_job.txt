@@ -1,0 +1,12 @@
+
+Software Developer Intern
+
+We are looking for a motivated Software Developer Intern.
+
+Requirements:
+- Strong knowledge of Python and Java
+- Good understanding of SQL
+- Experience with React and JavaScript
+- Knowledge of Git and GitHub
+- Understanding of Data Structures and Algorithms
+- Good knowledge of Object-Oriented Programming

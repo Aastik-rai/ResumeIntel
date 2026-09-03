@@ -506,6 +506,29 @@ svg {
 .input-wrapper input::placeholder {
     color: #a0a7b7;
 }
+.input-wrapper:has(textarea) {
+    align-items: flex-start;
+}
+.input-wrapper textarea {
+    width: 100%;
+    min-width: 0;
+
+    border: none;
+    outline: none;
+
+    background: transparent;
+
+    color: #172033;
+
+    font-size: 0.875rem;
+    font-family: inherit;
+
+    resize: vertical;
+}
+
+.input-wrapper textarea::placeholder {
+    color: #a0a7b7;
+}
 
 
 /* =========================
