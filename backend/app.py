@@ -1,9 +1,11 @@
 from flask import Flask, jsonify, request
+from backend.scoring.scorer import calculate_score
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import os
+from backend.scoring.scorer import calculate_ats_score
 
-from resume_processor import (
+from backend.resume_processor import (
     extract_text_from_pdf,
     extract_skills,
     extract_projects,
@@ -12,8 +14,9 @@ from resume_processor import (
     extract_education
 )
 
-from job_processor import extract_job_skills
-from comparison import compare_skills
+from backend.job_processor import extract_job_skills
+from backend.comparison import compare_skills
+from backend.pipeline import analyze_resume_for_company
 
 
 app = Flask(__name__)
@@ -25,14 +28,14 @@ app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
 # Allowed resume file types
 ALLOWED_EXTENSIONS = {"pdf", "docx"}
 
-# Upload folder
-UPLOAD_FOLDER = "uploads"
+# Store uploads inside backend/uploads
+UPLOAD_FOLDER = os.path.join(
+    os.path.dirname(__file__),
+    "uploads"
+)
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-
-# --------------------------------------------------
-# FILE VALIDATION
-# --------------------------------------------------
 
 def allowed_file(filename):
     return (
@@ -41,10 +44,6 @@ def allowed_file(filename):
     )
 
 
-# --------------------------------------------------
-# HOME ROUTE
-# --------------------------------------------------
-
 @app.route("/")
 def home():
     return jsonify({
@@ -52,10 +51,6 @@ def home():
         "message": "ResumeIntel backend is running!"
     })
 
-
-# --------------------------------------------------
-# RESUME ANALYSIS
-# --------------------------------------------------
 
 @app.route("/analyze", methods=["POST"])
 def analyze_resume():
@@ -102,13 +97,15 @@ def analyze_resume():
             "message": "Invalid filename"
         }), 400
 
-    file_path = os.path.join(UPLOAD_FOLDER, filename)
+    file_path = os.path.join(
+        UPLOAD_FOLDER,
+        filename
+    )
+
     file.save(file_path)
 
-    # Extract text
     text = extract_text_from_pdf(file_path)
 
-    # Extract resume information
     skills = extract_skills(text)
     projects = extract_projects(text)
     experience = extract_experience(text)
@@ -127,10 +124,6 @@ def analyze_resume():
         "filename": filename
     })
 
-
-# --------------------------------------------------
-# RESUME UPLOAD
-# --------------------------------------------------
 
 @app.route("/upload", methods=["POST"])
 def upload_resume():
@@ -163,7 +156,11 @@ def upload_resume():
             "message": "Invalid filename"
         }), 400
 
-    file_path = os.path.join(UPLOAD_FOLDER, filename)
+    file_path = os.path.join(
+        UPLOAD_FOLDER,
+        filename
+    )
+
     file.save(file_path)
 
     return jsonify({
@@ -172,10 +169,6 @@ def upload_resume():
         "filename": filename
     }), 200
 
-
-# --------------------------------------------------
-# JOB DESCRIPTION ANALYSIS
-# --------------------------------------------------
 
 @app.route("/job-analyze", methods=["POST"])
 def analyze_job():
@@ -194,7 +187,10 @@ def analyze_job():
             "message": "No file selected"
         }), 400
 
-    job_text = file.read().decode("utf-8")
+    job_text = file.read().decode(
+        "utf-8",
+        errors="replace"
+    )
 
     skills = extract_job_skills(job_text)
 
@@ -204,12 +200,31 @@ def analyze_job():
     })
 
 
-# --------------------------------------------------
-# FULL RESUME + JOB ANALYSIS
-# --------------------------------------------------
-
 @app.route("/full-analyze", methods=["POST"])
 def full_analyze():
+
+    # -----------------------------
+    # Validate company and role
+    # -----------------------------
+
+    company = request.form.get("company", "").strip()
+    role = request.form.get("role", "").strip()
+
+    if not company:
+        return jsonify({
+            "status": "error",
+            "message": "Company is required"
+        }), 400
+
+    if not role:
+        return jsonify({
+            "status": "error",
+            "message": "Role is required"
+        }), 400
+
+    # -----------------------------
+    # Validate resume
+    # -----------------------------
 
     if "resume" not in request.files:
         return jsonify({
@@ -217,14 +232,7 @@ def full_analyze():
             "message": "No resume file uploaded"
         }), 400
 
-    if "job" not in request.files:
-        return jsonify({
-            "status": "error",
-            "message": "No job description uploaded"
-        }), 400
-
     resume_file = request.files["resume"]
-    job_file = request.files["job"]
 
     if resume_file.filename == "":
         return jsonify({
@@ -232,23 +240,25 @@ def full_analyze():
             "message": "No resume selected"
         }), 400
 
-    if job_file.filename == "":
+    if not allowed_file(resume_file.filename):
         return jsonify({
             "status": "error",
-            "message": "No job description selected"
+            "message": "Only PDF and DOCX files are allowed"
         }), 400
 
-    # -------------------------------
-    # RESUME PROCESSING
-    # -------------------------------
-
-    resume_filename = secure_filename(resume_file.filename)
+    resume_filename = secure_filename(
+        resume_file.filename
+    )
 
     if not resume_filename:
         return jsonify({
             "status": "error",
             "message": "Invalid resume filename"
         }), 400
+
+    # -----------------------------
+    # Save resume
+    # -----------------------------
 
     resume_path = os.path.join(
         UPLOAD_FOLDER,
@@ -257,55 +267,107 @@ def full_analyze():
 
     resume_file.save(resume_path)
 
-    resume_text = extract_text_from_pdf(resume_path)
+    # -----------------------------
+    # Extract resume information
+    # -----------------------------
 
-    resume_skills = extract_skills(resume_text)
-    projects = extract_projects(resume_text)
-    experience = extract_experience(resume_text)
-    name = extract_name(resume_text)
-    education = extract_education(resume_text)
-
-    # -------------------------------
-    # JOB PROCESSING
-    # -------------------------------
-
-    job_text = job_file.read().decode("utf-8")
-
-    job_skills = extract_job_skills(job_text)
-
-    # -------------------------------
-    # COMPARISON
-    # -------------------------------
-
-    comparison = compare_skills(
-        resume_skills,
-        job_skills
+    resume_text = extract_text_from_pdf(
+        resume_path
     )
+    job_text = ""
 
-    # -------------------------------
-    # FINAL RESPONSE
-    # -------------------------------
+    if "job" in request.files:
+        job_file = request.files["job"]
+        job_text = job_file.read().decode(
+            "utf-8",
+            errors="replace"
+        )
+
+    resume_data = {
+        "skills": extract_skills(resume_text),
+        "projects": extract_projects(resume_text),
+        "experience": extract_experience(resume_text),
+        "name": extract_name(resume_text),
+        "education": extract_education(resume_text)
+    }
+    ats_score = calculate_ats_score(
+    resume_text,
+    resume_data
+    )
+    
+
+    # -----------------------------
+    # Run company intelligence
+    # -----------------------------
+
+    try:
+
+        result = analyze_resume_for_company(
+            company,
+            role,
+            resume_data,
+            job_text
+        )
+
+    except Exception as e:
+
+        return jsonify({
+            "status": "error",
+            "message": "Company analysis failed",
+            "error": str(e)
+        }), 500
+
+    # -----------------------------
+    #          Calculate final score
+    # -----------------------------
+
+    skills_score = result["fit_score"]
+    experience_count = len(resume_data.get("experience", []))
+    experience_score = min(experience_count * 50, 100)
+
+    projects_count = len(resume_data.get("projects", []))
+    projects_score = min(projects_count * 25, 100)
+
+    overall_score = calculate_score(
+        skills_score,
+        experience_score,
+        projects_score,
+        ats_score
+    )
+    
+    
+
+    # -----------------------------
+    # Return final result
+    # -----------------------------
 
     return jsonify({
         "status": "success",
 
-        "name": name,
-        "education": education,
-        "skills": resume_skills,
-        "projects": projects,
-        "experience": experience,
+        "company": company,
+        "role": role,
 
-        "required_skills": job_skills,
+        "name": resume_data["name"],
+        "education": resume_data["education"],
+        "skills": resume_data["skills"],
+        "projects": resume_data["projects"],
+        "experience": resume_data["experience"],
 
-        "matched_skills": comparison["matched_skills"],
-        "missing_skills": comparison["missing_skills"],
-        "fit_score": comparison["fit_score"]
+        "fit_score": result["fit_score"],
+        "company_fit_score": result["company_fit_score"],
+        "jd_fit_score": result["jd_fit_score"],
+        "ats_score": ats_score,
+        "skills_score": skills_score,
+        "experience_score": experience_score,
+        "projects_score": projects_score,
+        "overall_score": overall_score,
+        "jd_skills": result["jd_skills"],
+        "matched_skills": result["matched_skills"],
+        "missing_skills": result["missing_skills"],
+        "company_profile": result["company_profile"],
+        "matching_jobs": result["matching_jobs"]
     })
 
-
-# --------------------------------------------------
-# RUN FLASK SERVER
-# --------------------------------------------------
 
 if __name__ == "__main__":
     app.run(

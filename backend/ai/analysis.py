@@ -7,6 +7,36 @@ genai.configure(api_key=GEMINI_API_KEY, transport="rest")
 model = genai.GenerativeModel("gemini-flash-latest")
 
 
+
+SKILL_ALIASES = {
+    "postgres": "postgresql",
+    "postgresql": "postgresql",
+
+    "rest": "rest api",
+    "restful": "rest api",
+    "rest api": "rest api",
+
+    "node": "node.js",
+    "nodejs": "node.js",
+    "node.js": "node.js",
+
+    "js": "javascript",
+    "javascript": "javascript",
+
+    "ts": "typescript",
+    "typescript": "typescript",
+
+    "k8s": "kubernetes",
+    "kubernetes": "kubernetes",
+
+    "ai": "artificial intelligence",
+    "artificial intelligence": "artificial intelligence",
+
+    "ml": "machine learning",
+    "machine learning": "machine learning",
+}
+
+
 def extract_terms(text):
     text = text.lower()
 
@@ -71,43 +101,92 @@ def extract_terms(text):
 
     for skill in skills:
         if re.search(r"\b" + re.escape(skill) + r"\b", text):
-            found.add(skill)
-
+            normalized = SKILL_ALIASES.get(skill, skill)
+            found.add(normalized)
     return found
 
 def build_company_signal_profile(postings):
     counts = Counter()
+
     for posting in postings:
         counts.update(extract_terms(posting))
 
     total = len(postings)
+
     if total == 0:
         return []
 
     profile = []
+
     for word, hits in counts.most_common(30):
         pct = round(100 * hits / total)
-        tier = "CORE" if pct >= 70 else "IMPORTANT" if pct >= 30 else "NOISE"
-        profile.append({"skill": word, "pct": pct, "tier": tier})
+
+        if pct >= 70:
+            tier = "CORE"
+        elif pct >= 40:
+            tier = "IMPORTANT"
+        elif pct >= 20:
+            tier = "RELEVANT"
+        else:
+            tier = "NOISE"
+
+        profile.append({
+            "skill": word,
+            "pct": pct,
+            "tier": tier
+        })
+
     return profile
 
 
 def analyze_fit(resume_data, company_profile):
-    resume_skills = set(s.lower() for s in resume_data.get("skills", []))
-    matched, missing = [], []
+    resume_skills = set()
+
+    for skill in resume_data.get("skills", []):
+        skill = skill.lower().strip()
+        normalized = SKILL_ALIASES.get(skill, skill)
+        resume_skills.add(normalized)
+
+    matched = []
+    missing = []
+
     for item in company_profile:
         if item["skill"].lower() in resume_skills:
             matched.append(item)
         else:
             missing.append(item)
 
-    weights = {"CORE": 3, "IMPORTANT": 1.5, "NOISE": 0.5}
-    total_weight = sum(weights[i["tier"]] for i in company_profile) or 1
-    earned_weight = sum(weights[i["tier"]] for i in matched)
-    score = round(100 * earned_weight / total_weight)
+    weights = {
+        "CORE": 3,
+        "IMPORTANT": 2,
+        "RELEVANT": 1,
+        "NOISE": 0.25
+    }
 
-    missing_sorted = sorted(missing, key=lambda i: -weights[i["tier"]])
-    return {"score": score, "matched": matched, "missing": missing_sorted}
+    total_weight = sum(
+        weights[item["tier"]]
+        for item in company_profile
+    ) or 1
+
+    earned_weight = sum(
+        weights[item["tier"]]
+        for item in matched
+    )
+
+    score = round(
+        100 * earned_weight / total_weight
+    )
+
+    missing_sorted = sorted(
+        missing,
+        key=lambda item: -weights[item["tier"]]
+    )
+
+    return {
+        "score": score,
+        "matched": matched,
+        "missing": missing_sorted
+    }
 
 
 def rewrite_bullet(bullet, company_profile):
@@ -220,11 +299,21 @@ if __name__ == "__main__":
     result = full_analysis(resume, profile)
     print(result)
 
-
 if __name__ == "__main__":
-    text = """
-    We are looking for a backend engineer with Python, Flask,
-    PostgreSQL, REST API and Docker experience.
-    """
+    resume = {
+        "skills": [
+            "Python",
+            "Postgres",
+            "RESTful"
+        ]
+    }
 
-    print(extract_terms(text))
+    profile = [
+        {"skill": "python", "pct": 100, "tier": "CORE"},
+        {"skill": "postgresql", "pct": 50, "tier": "IMPORTANT"},
+        {"skill": "rest api", "pct": 50, "tier": "IMPORTANT"}
+    ]
+
+    result = analyze_fit(resume, profile)
+
+    print(result)

@@ -1,27 +1,47 @@
+import os
 from pypdf import PdfReader
+from docx import Document
 
 
-# -----------------------------
-# Extract text from PDF
-# -----------------------------
+def extract_text(file_path):
+    """
+    Extract text from PDF or DOCX resume.
+    """
 
+    extension = os.path.splitext(file_path)[1].lower()
+
+    if extension == ".pdf":
+        reader = PdfReader(file_path)
+
+        text = ""
+
+        for page in reader.pages:
+            page_text = page.extract_text()
+
+            if page_text:
+                text += page_text + "\n"
+
+        return text
+
+    elif extension == ".docx":
+        document = Document(file_path)
+
+        text = ""
+
+        for paragraph in document.paragraphs:
+            if paragraph.text.strip():
+                text += paragraph.text + "\n"
+
+        return text
+
+    else:
+        raise ValueError("Unsupported file type")
+
+
+# Keep this function name because app.py currently uses it.
 def extract_text_from_pdf(file_path):
-    reader = PdfReader(file_path)
+    return extract_text(file_path)
 
-    text = ""
-
-    for page in reader.pages:
-        page_text = page.extract_text()
-
-        if page_text:
-            text += page_text + "\n"
-
-    return text
-
-
-# -----------------------------
-# Skills list
-# -----------------------------
 
 SKILLS = [
     "C++",
@@ -38,32 +58,31 @@ SKILLS = [
     "React",
     "Node.js",
     "MongoDB",
-    "Machine Learning"
+    "Machine Learning",
+    "Flask",
+    "Django",
+    "FastAPI",
+    "Docker",
+    "PostgreSQL",
+    "REST API",
+    "AWS",
+    "Kubernetes"
 ]
 
 
-# -----------------------------
-# Extract Skills
-# -----------------------------
-
 def extract_skills(text):
-
     found_skills = []
 
-    for skill in SKILLS:
+    text_lower = text.lower()
 
-        if skill.lower() in text.lower():
+    for skill in SKILLS:
+        if skill.lower() in text_lower:
             found_skills.append(skill)
 
     return found_skills
 
 
-# -----------------------------
-# Extract Projects
-# -----------------------------
-
 def extract_projects(text):
-
     projects = []
 
     lines = text.split("\n")
@@ -77,7 +96,6 @@ def extract_projects(text):
     project_section = False
 
     for line in lines:
-
         line = line.strip()
 
         if line.lower() == "projects":
@@ -85,71 +103,117 @@ def extract_projects(text):
             continue
 
         if project_section:
-
             if line.lower() in [
                 "experience",
                 "certifications",
                 "achievements",
-                "interests"
+                "interests",
+                "education",
+                "skills"
             ]:
                 break
 
             for project in project_names:
-
                 if project.lower() == line.lower():
                     projects.append(project)
 
     return projects
 
 
-# -----------------------------
-# Extract Experience
-# -----------------------------
-
 def extract_experience(text):
+    """
+    Extract experience section into:
+    title, company, and bullets.
+    """
 
     experience = []
-
     lines = text.split("\n")
 
     experience_section = False
+    current_experience = None
 
     for line in lines:
-
         line = line.strip()
+
+        if not line:
+            continue
 
         if line.lower() == "experience":
             experience_section = True
             continue
 
-        if experience_section:
+        if not experience_section:
+            continue
 
-            if line.lower() in [
-                "projects",
-                "education",
-                "skills",
-                "certifications",
-                "achievements",
-                "interests"
-            ]:
-                break
+        if line.lower() in [
+            "projects",
+            "education",
+            "skills",
+            "technical skills",
+            "certifications",
+            "achievements",
+            "interests"
+        ]:
+            break
 
-            if line:
-                experience.append(line)
+        # PDF may convert bullet characters to \x7f.
+        is_bullet = line.startswith(("-", "•", "*", "\x7f"))
+
+        if is_bullet:
+
+            if current_experience is None:
+                current_experience = {
+                    "title": "",
+                    "company": "",
+                    "bullets": []
+                }
+                experience.append(current_experience)
+
+            bullet = line.lstrip("-•*\x7f ").strip()
+
+            current_experience["bullets"].append(bullet)
+
+        else:
+
+            # First non-bullet line = experience heading.
+            if current_experience is None:
+
+                # Example:
+                # Software Development Intern – Tech Solutions Lab | May 2026 – Aug 2026
+
+                heading = line.split("|")[0].strip()
+
+                # Separate role and company using the dash.
+                if "–" in heading:
+                    title, company = heading.split("–", 1)
+                    title = title.strip()
+                    company = company.strip()
+                elif "-" in heading:
+                    title, company = heading.split("-", 1)
+                    title = title.strip()
+                    company = company.strip()
+                else:
+                    title = heading
+                    company = ""
+
+                current_experience = {
+                    "title": title,
+                    "company": company,
+                    "bullets": []
+                }
+
+                experience.append(current_experience)
+
+            # Additional non-bullet line before bullets.
+            elif not current_experience["bullets"]:
+                current_experience["company"] = line
 
     return experience
 
-
-# -----------------------------
-# Extract Name
-# -----------------------------
-
 def extract_name(text):
-
     lines = text.split("\n")
 
     for line in lines:
-
         line = line.strip()
 
         if line:
@@ -158,12 +222,7 @@ def extract_name(text):
     return "Name not found"
 
 
-# -----------------------------
-# Extract Education
-# -----------------------------
-
 def extract_education(text):
-
     education = []
 
     lines = text.split("\n")
@@ -171,7 +230,6 @@ def extract_education(text):
     education_section = False
 
     for line in lines:
-
         line = line.strip()
 
         if line.lower() == "education":
@@ -194,4 +252,4 @@ def extract_education(text):
             if line:
                 education.append(line)
 
-    return education
+    return education    

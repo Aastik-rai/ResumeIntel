@@ -36,7 +36,7 @@ const navAnalyzeButton =
 // BACKEND URL
 // ===============================
 
-const API_URL = "http://localhost:8080";
+const API_URL = "http://127.0.0.1:8080";
 
 
 // ===============================
@@ -230,7 +230,7 @@ function updateResults(
     document.getElementById(
         "overall-score"
     ).textContent =
-        Math.round(fitScore);
+        Number(data.overall_score).toFixed(2);
 
 
     // ===============================
@@ -252,19 +252,14 @@ function updateResults(
     // SKILLS MATCH
     // ===============================
 
-    let skillsScore = 0;
+    const matchedSkills =
+        data.matched_skills || [];
 
-    if (
-        data.required_skills &&
-        data.required_skills.length > 0
-    ) {
+    const missingSkills =
+        data.missing_skills || [];
 
-        skillsScore =
-            (
-                data.matched_skills.length /
-                data.required_skills.length
-            ) * 100;
-    }
+    const skillsScore =
+        Number(data.skills_score) || 0;
 
     document.getElementById(
         "skills-score"
@@ -284,15 +279,18 @@ function updateResults(
     // Backend currently does not
     // calculate a real ATS score.
 
+    const atsScore =
+        Number(data.ats_score) || 0;
+
     document.getElementById(
         "ats-score"
     ).textContent =
-        "N/A";
+        Math.round(atsScore) + "%";
 
     document.getElementById(
         "ats-progress"
     ).style.width =
-        "0%";
+        atsScore + "%";
 
 
     // ===============================
@@ -343,7 +341,7 @@ function updateResults(
                     document.createElement("span");
 
                 span.textContent =
-                    skill;
+                    skill.skill;
 
                 keywordList.appendChild(span);
             }
@@ -391,7 +389,7 @@ function updateResults(
 
                 li.appendChild(
                     document.createTextNode(
-                        " Strong match in " + skill
+                        " Strong match in " + skill.skill
                     )
                 );
 
@@ -417,11 +415,12 @@ function updateResults(
 
     const circumference = 327;
 
+    const overallScore =
+        Number(data.overall_score) || 0;
+
     const offset =
         circumference -
-        (
-            fitScore / 100
-        ) * circumference;
+        (overallScore / 100) * circumference;
 
 
     document.querySelector(
@@ -437,7 +436,8 @@ function updateResults(
 
 analyzeButton.addEventListener(
     "click",
-    async function () {
+    async function (event) {
+        event.preventDefault();
 
         const company =
             companyInput.value.trim();
@@ -532,6 +532,19 @@ analyzeButton.addEventListener(
 
             const formData =
                 new FormData();
+
+
+
+            // Add company and role
+            formData.append(
+                "company",
+                company
+            );
+
+            formData.append(
+                "role",
+                role
+            );
 
 
             // Add resume
